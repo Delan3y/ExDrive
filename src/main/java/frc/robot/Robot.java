@@ -1,4 +1,4 @@
-// Copyright (c) FIRST and other WPILib contributors.
+// Copyright (c) FIRST and other WPILib contributors
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
@@ -11,8 +11,9 @@ import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import edu.wpi.first.wpilibj.Compressor;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
+//import edu.wpi.first.wpilibj.Compressor;
+//import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
@@ -40,6 +41,7 @@ public class Robot extends TimedRobot {
 
 
         //drivetrain motors
+        
     WPI_TalonFX motor1 = new WPI_TalonFX(0);
     WPI_TalonFX motor2 = new WPI_TalonFX(1);
     WPI_TalonFX motor3 = new WPI_TalonFX(2);
@@ -57,19 +59,46 @@ public class Robot extends TimedRobot {
   private final XboxController xbox = new XboxController(0);
 
   DifferentialDrive drivetrain = new DifferentialDrive(leftGroup, rightGroup);
-
+ 
   Faults _faults_1 = new Faults();
   Faults _faults_2 = new Faults();
   Faults _faults_3 = new Faults();
   Faults _faults_4 = new Faults();
 
-  //joystick 
+  //joystick a
   Joystick _joystick = new Joystick(1);
   
   //Pneumatics
-  private final Compressor comp = new Compressor();
-  private final DoubleSolenoid solenoid = new DoubleSolenoid(0,1);
+  //private final Compressor comp = new Compressor();
+  //private final DoubleSolenoid solenoid = new DoubleSolenoid(0,1);
 
+  double startTime;
+  @Override public void autonomousInit() {
+      startTime = Timer.getFPGATimestamp();
+    
+  }
+  
+  @Override public void autonomousPeriodic() {
+    double time = Timer.getFPGATimestamp();
+
+    if(time - startTime < 3){
+      motor1.set(0.4);
+      motor2.set(-0.4);
+      motor3.set(0.4);
+      motor4.set(-0.4);
+    }
+    else{
+      motor1.set(0);
+      motor2.set(0);
+      motor3.set(0);
+      motor4.set(0);
+    }
+  }
+  @Override public void teleopInit() {
+  
+  
+  //comp.stop();
+  }
   @Override
   public void teleopPeriodic() {
     // Drive with arcade drive.
@@ -90,12 +119,10 @@ public class Robot extends TimedRobot {
             turn = 0;
         }
 
-        /* drive robot */
-        if(xbox.getAButtonPressed())
+        //drive robot 
+        
         drivetrain.arcadeDrive(forw, turn);
-        else if(xbox.getBButtonPressed())
-        drivetrain.arcadeDrive(0.5*forw + forw,0.5*turn + turn);
-
+        
         /*
          * [2] Make sure Gamepad Forward is positive for FORWARD, and GZ is positive for
          * RIGHT
@@ -105,12 +132,13 @@ public class Robot extends TimedRobot {
         /* get sensor values */
         // double leftPos = _leftFront.GetSelectedSensorPosition(0);
         // double rghtPos = _rghtFront.GetSelectedSensorPosition(0);
+        
         double motor1VelUnitsPer100ms = motor1.getSelectedSensorVelocity(0);
         double motor2VelUnitsPer100ms = motor2.getSelectedSensorVelocity(0);
         double motor3VelUnitsPer100ms = motor3.getSelectedSensorVelocity(0);
         double motor4VelUnitsPer100ms = motor4.getSelectedSensorVelocity(0);
 
-        work += " L:" +  motor1VelUnitsPer100ms +"\n" + motor2VelUnitsPer100ms + " \nR:" + motor3VelUnitsPer100ms +"\n" + motor4VelUnitsPer100ms;
+       // work += " L:" +  motor1VelUnitsPer100ms +"\n" + motor2VelUnitsPer100ms + " \nR:" + motor3VelUnitsPer100ms +"\n" + motor4VelUnitsPer100ms;
 
         //tiny green wheels
         if(xbox.getBumper(Hand.kLeft)){
@@ -123,30 +151,34 @@ public class Robot extends TimedRobot {
           intake2.set(0);
 
         //maroon wheels
-        if(xbox.getXButton())
+        if(xbox.getYButton())
           intake.set(-0.6);
-        else if(xbox.getYButton())
+        else if(xbox.getXButton())
          intake.set(0.6);
-        else
+        else  
           intake.set(0);
 
+        
         //shooter
         if(xbox.getAButton()){
-          shooter.set(0.1);
+          shooter.set(0.55);
         }
         else
           shooter.set(0);
-        
+         
+        //  comp.start();
+          //Pneumatics
+          /*
         if(xbox.getStartButton())
           solenoid.set(DoubleSolenoid.Value.kForward);
         else if(xbox.getBackButton())
           solenoid.set(DoubleSolenoid.Value.kReverse);
         else
           solenoid.set(DoubleSolenoid.Value.kOff);
-
-        /*
-         * drive motor at least 25%, Talons will auto-detect if sensor is out of phase
-         */
+*/
+        
+         // drive motor at least 25%, Talons will auto-detect if sensor is out of phase
+         
         motor1.getFaults(_faults_1);
         motor2.getFaults(_faults_2);
         motor3.getFaults(_faults_3);
@@ -165,13 +197,15 @@ public class Robot extends TimedRobot {
           work += " R sensor is out of phase";
       }
 
-        /* print to console if btn1 is held down */
+      //  print to console if btn1 is held down 
         if (btn1) 
             System.out.println(work);
   }
   @Override
   public void robotInit() {
-    /* factory default values */
+    CameraServer.getInstance().startAutomaticCapture();
+    //comp.start();
+    /* factory default values 
     motor1.configFactoryDefault();
     motor2.configFactoryDefault();
     motor3.configFactoryDefault();
@@ -179,16 +213,18 @@ public class Robot extends TimedRobot {
 
 
 
-    /* set up followers */
+    // set up followers 
     //rghtFollower.follow(_rghtFront);
     //_leftFollower.follow(_leftFront);
 
     /* [3] flip values so robot moves forward when stick-forward/LEDs-green */
+
+    
     motor3.setInverted(TalonFXInvertType.CounterClockwise); // !< Update this
     motor4.setInverted(TalonFXInvertType.Clockwise);
     motor1.setInverted(TalonFXInvertType.Clockwise); // !< Update this
     motor2.setInverted(TalonFXInvertType.CounterClockwise);
-
+    
 
     /*
      * set the invert of the followers to match their respective master controllers
